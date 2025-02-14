@@ -59,3 +59,51 @@ jQuery(function($) {
         });
     }
 });
+
+jQuery(function($) {
+    let codeEditor;
+    
+    // Initialize CodeMirror
+    function initCodeEditor(type) {
+        const editorSettings = wp.codeEditor.defaultSettings;
+        editorSettings.codemirror.mode = type === 'css' ? 'css' : 'javascript';
+        editorSettings.codemirror.extraKeys = {
+            'Ctrl-Space': 'autocomplete',
+            'Tab': function(cm) {
+                if (cm.somethingSelected()) {
+                    cm.indentSelection('add');
+                } else {
+                    cm.execCommand('insertSoftTab');
+                }
+            }
+        };
+
+        if(codeEditor) {
+            codeEditor.destroy();
+        }
+
+        codeEditor = wp.codeEditor.initialize($('#cmSnippetCode'), editorSettings);
+    }
+
+    // Handle type change
+    $('#cmSnippetType').on('change', function() {
+        initCodeEditor($(this).val());
+    });
+
+    // Initial editor setup
+    initCodeEditor($('#cmSnippetType').val());
+
+    // Handle form submit
+    $('#cmAddSnippetForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Update textarea with editor content
+        if(codeEditor) {
+            codeEditor.codemirror.save();
+        }
+        
+        // ... rest of existing submit code ...
+    });
+
+    // ... rest of existing code ...
+});

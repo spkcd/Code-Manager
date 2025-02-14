@@ -1,10 +1,9 @@
 <?php
 /**
- * Plugin Name: Code Manager
- * Description: Manage and toggle CSS/JS code snippets
- * Version: 1.0.0
- * Author: Your Name
- * Text Domain: code-manager
+ * Plugin URI: https://github.com/spkcd/Code-Manager
+ * Author URI: https://sparkwebstudio.com/
+ * License: GPL-3.0
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  */
 
 defined('ABSPATH') || exit;

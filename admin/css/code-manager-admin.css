@@ -64,3 +64,27 @@
 .cm-toggle-switch input:checked + label:after {
     transform: translateX(20px);
 }
+
+/* CodeMirror Overrides */
+.CodeMirror {
+    border: 1px solid #ddd;
+    margin: 10px 0;
+    height: auto;
+    font-size: 14px;
+}
+
+.CodeMirror-scroll {
+    min-height: 300px;
+}
+
+.cm-s-default .cm-tag {
+    color: #905;
+}
+
+.cm-s-default .cm-attribute {
+    color: #690;
+}
+
+.cm-s-default .cm-string {
+    color: #a11;
+}

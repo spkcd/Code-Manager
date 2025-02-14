@@ -142,3 +142,26 @@ class CM_Admin {
         wp_send_json_success($snippet_id);
     }
 }
+
+// Add this to the enqueue_assets function
+public static function enqueue_assets($hook) {
+    if ('toplevel_page_code-manager' !== $hook) return;
+
+    // Initialize code editor
+    wp_enqueue_code_editor([
+        'type' => 'text/css',
+        'codemirror' => [
+            'mode' => 'css',
+            'lint' => true,
+            'autoCloseBrackets' => true,
+            'matchBrackets' => true,
+        ]
+    ]);
+
+    // Add these dependencies
+    wp_enqueue_script('wp-theme-plugin-editor');
+    wp_enqueue_style('wp-codemirror');
+
+    // ... rest of existing enqueue code ...
+}
+
