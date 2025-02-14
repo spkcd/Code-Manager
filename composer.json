@@ -1,0 +1,11 @@
+{
+    "name": "your-name/code-manager",
+    "description": "WordPress Code Snippet Manager",
+    "type": "wordpress-plugin",
+    "autoload": {
+        "psr-4": {
+            "Code_Manager\\": "includes/"
+        }
+    },
+    "require": {}
+}

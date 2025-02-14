@@ -1,0 +1,66 @@
+.cm-admin-wrap {
+    max-width: 1000px;
+    margin: 20px auto;
+}
+
+.cm-snippet-form,
+.cm-snippets-list {
+    background: #fff;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.cm-snippet-form label {
+    display: block;
+    margin: 10px 0;
+    font-weight: 600;
+}
+
+#cmSnippetCode {
+    width: 100%;
+    font-family: monospace;
+}
+
+.cm-toggle-switch {
+    position: relative;
+    display: inline-block;
+}
+
+.cm-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.cm-toggle-switch label {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+    background: #ddd;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.cm-toggle-switch label:after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s;
+}
+
+.cm-toggle-switch input:checked + label {
+    background: #007cba;
+}
+
+.cm-toggle-switch input:checked + label:after {
+    transform: translateX(20px);
+}
