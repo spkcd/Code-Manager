@@ -1,31 +1,44 @@
+/* Base Styles */
 .cm-admin-wrap {
     max-width: 1000px;
-    margin: 20px auto;
+    margin: 2rem auto;
+    padding: 0 20px;
 }
 
+/* Form Elements */
 .cm-snippet-form,
 .cm-snippets-list {
     background: #fff;
-    padding: 20px;
-    margin: 20px 0;
+    padding: 2rem;
+    margin: 2rem 0;
     border-radius: 4px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.cm-snippet-form label {
+.cm-field-group {
+    margin: 1.5rem 0;
+}
+
+.cm-field-group label {
     display: block;
-    margin: 10px 0;
+    margin-bottom: 0.5rem;
     font-weight: 600;
 }
 
-#cmSnippetCode {
-    width: 100%;
-    font-family: monospace;
+/* Code Editor */
+.CodeMirror {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 1rem 0;
+    height: 400px;
 }
 
+/* Toggle Switch */
 .cm-toggle-switch {
     position: relative;
     display: inline-block;
+    width: 40px;
+    height: 20px;
 }
 
 .cm-toggle-switch input {
@@ -35,56 +48,73 @@
 }
 
 .cm-toggle-switch label {
-    position: relative;
-    display: inline-block;
-    width: 40px;
-    height: 20px;
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: #ddd;
     border-radius: 20px;
-    cursor: pointer;
-    transition: background 0.3s;
+    transition: .4s;
 }
 
-.cm-toggle-switch label:after {
-    content: '';
+.cm-toggle-switch label:before {
     position: absolute;
-    width: 16px;
+    content: "";
     height: 16px;
-    border-radius: 50%;
-    background: #fff;
-    top: 2px;
+    width: 16px;
     left: 2px;
-    transition: transform 0.3s;
+    bottom: 2px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .4s;
 }
 
 .cm-toggle-switch input:checked + label {
     background: #007cba;
 }
 
-.cm-toggle-switch input:checked + label:after {
+.cm-toggle-switch input:checked + label:before {
     transform: translateX(20px);
 }
 
-/* CodeMirror Overrides */
-.CodeMirror {
-    border: 1px solid #ddd;
-    margin: 10px 0;
-    height: auto;
-    font-size: 14px;
+/* Buttons */
+.button-delete {
+    color: #b32d2e;
+    border-color: #b32d2e;
 }
 
-.CodeMirror-scroll {
-    min-height: 300px;
+.button-delete:hover {
+    background: #b32d2e;
+    color: white;
 }
 
-.cm-s-default .cm-tag {
-    color: #905;
+/* Table */
+.cm-snippets-list table {
+    margin-top: 1rem;
 }
 
-.cm-s-default .cm-attribute {
-    color: #690;
+.cm-snippets-list th {
+    font-weight: 600;
 }
 
-.cm-s-default .cm-string {
-    color: #a11;
+/* Default Snippet Badge */
+.cm-default-badge {
+    background: #2271b1;
+    color: white;
+    font-size: 0.8em;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* Prevent deletion of default snippets */
+tr[data-snippet-id^="cm_default_"] .cm-delete-snippet {
+    display: none;
+}
+
+tr[data-snippet-id^="cm_default_"] .cm-toggle-snippet {
+    margin-right: 0;
 }

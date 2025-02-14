@@ -1,39 +1,42 @@
 <?php
 namespace Code_Manager\Public;
 
+defined('ABSPATH') || exit;
+
 class CM_Public {
+    private static $snippets_option = 'cm_code_snippets';
+
     public static function init() {
-        add_action('wp_head', [__CLASS__, 'output_css_snippets']);
-        add_action('wp_footer', [__CLASS__, 'output_js_snippets']);
+        add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_snippets']);
     }
 
-    public static function output_css_snippets() {
-        $snippets = get_option('cm_code_snippets', []);
+    public static function enqueue_snippets() {
+        // Register dummy handles
+        wp_register_style('code-manager', false, [], CM_VERSION);
+        wp_register_script('code-manager', false, [], CM_VERSION, true);
+
+        $snippets = get_option(self::$snippets_option, []);
         $css = '';
+        $js = '';
 
         foreach ($snippets as $snippet) {
-            if ($snippet['active'] && $snippet['type'] === 'css') {
-                $css .= wp_strip_all_tags($snippet['code']) . "\n";
+            if (!$snippet['active']) continue;
+
+            if ('css' === $snippet['type']) {
+                $css .= $snippet['code'] . "\n";
+            } else {
+                $js .= $snippet['code'] . "\n";
             }
         }
 
         if (!empty($css)) {
-            echo "<style id='cm-css-snippets'>\n" . $css . "</style>\n";
-        }
-    }
-
-    public static function output_js_snippets() {
-        $snippets = get_option('cm_code_snippets', []);
-        $js = '';
-
-        foreach ($snippets as $snippet) {
-            if ($snippet['active'] && $snippet['type'] === 'js') {
-                $js .= wp_strip_all_tags($snippet['code']) . "\n";
-            }
+            wp_enqueue_style('code-manager');
+            wp_add_inline_style('code-manager', $css);
         }
 
         if (!empty($js)) {
-            echo "<script id='cm-js-snippets'>\n" . $js . "</script>\n";
+            wp_enqueue_script('code-manager');
+            wp_add_inline_script('code-manager', $js);
         }
     }
 }

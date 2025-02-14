@@ -1,0 +1,23 @@
+[
+    {
+        "id": "cm_default_1",
+        "name": "Safari Grid Fix",
+        "type": "css",
+        "code": "@media screen and (-webkit-min-device-pixel-ratio: 0) {\n  .e-grid .elementor-element {\n    height: auto !important;\n    min-height: 0 !important;\n  }\n}",
+        "active": false
+    },
+    {
+        "id": "cm_default_2",
+        "name": "Mobile Menu Toggle",
+        "type": "js",
+        "code": "document.addEventListener('DOMContentLoaded', function() {\n  const menuToggle = document.querySelector('.menu-toggle');\n  if (menuToggle) {\n    menuToggle.addEventListener('click', function() {\n      this.classList.toggle('active');\n    });\n  }\n});",
+        "active": false
+    },
+    {
+        "id": "cm_default_3",
+        "name": "Basic CSS Reset",
+        "type": "css",
+        "code": "/* Box sizing reset */\n*, *::before, *::after {\n  box-sizing: border-box;\n}\n\n/* Remove default margin */\nbody, h1, h2, h3, h4, h5, h6, p {\n  margin: 0;\n}",
+        "active": false
+    }
+]

@@ -1,80 +1,104 @@
-# Code Manager
+# Code Manager ![WordPress Plugin Version](https://img.shields.io/badge/Version-1.3.0-blue) ![License](https://img.shields.io/badge/License-GPL--3.0-green)
 
-![WordPress Plugin Version](https://img.shields.io/badge/Version-1.1.0-blue) 
-![WordPress Compatibility](https://img.shields.io/badge/WordPress-6.5%2B-brightgreen)
+![Code Manager Interface](assets/banner-1544x500.png)
 
-A professional code snippet management solution for WordPress developers by [SPARKWEB Studio](https://sparkwebstudio.com/).
-
-![Code Manager Interface]([screenshot-url])
+Professional code snippet management for WordPress, developed by [SPARKWEB Studio](https://sparkwebstudio.com/).
 
 ## Features
 
-🛠 **Core Functionality**
--  Manage CSS/JavaScript code snippets from admin dashboard
--  Toggle activation with switch controls
--  Syntax highlighting with CodeMirror integration
--  Automatic code validation
--  Multi-language support (CSS/JS)
--  Non-destructive activation system
+### Core Functionality
+-  **Default Snippets Package**  
+  Pre-installed curated snippets for common use cases (Safari fixes, CSS resets, etc)
+-  **Protected Defaults**  
+  Default snippets can't be deleted, only enabled/disabled
+-  **Multi-Type Support**  
+  Manage CSS and JavaScript snippets separately
+-  **Version Control**  
+  Track default snippet package versions
 
-🔒 **Security**
--  Role-based access control (Admin only)
--  Input sanitization/output escaping
--  Nonce verification for all actions
--  Secure AJAX handling
--  Strict capability checks
+### Security
+-  **Input Hardening**  
+  Code sanitization with WPCS standards
+-  **Role-Based Access**  
+  Requires `manage_options` capability
+-  **Nonce Verification**  
+  All AJAX actions protected
+-  **Audit Logging**  
+  Error logging for suspicious activities
 
-⚡ **Performance**
--  Conditional code loading
--  Minified assets delivery
--  Zero database bloat
--  Automatic cache busting
--  Lightweight architecture (<100KB)
+### Performance
+-  **Selective Loading**  
+  Only active snippets load on frontend
+-  **Cache Optimization**  
+  Version-busted asset loading
+-  **Lightweight Core**  
+  <50KB base plugin footprint
+-  **Efficient Storage**  
+  Single option record in database
 
 ## Installation
 
-1. Clone repository:
+1. **Upload Plugin**  
+   Through WordPress admin → Plugins → Add New
+
+2. **Activate Plugin**  
+   Default snippets will auto-install on activation
+
+3. **Access Interface**  
+   Navigate to **Code Manager** in admin sidebar
+
+## Usage
+
+### Managing Snippets
+-  **Toggle Defaults**  
+  Enable/disable pre-installed snippets
+-  **Add Custom Code**  
+  Create new CSS/JS snippets
+-  **Bulk Actions**  
+  Toggle multiple snippets at once
+
+![Admin Interface](assets/screenshot-1.png)
+
+### Best Practices
+1. Test snippets in staging first
+2. Use descriptive names
+3. Keep CSS under 500 lines
+4. Use IIFE for JavaScript
+5. Audit active snippets monthly
+
+## Changelog
+
+### [1.3.0] - 2025-02-15
+**Added**
+-  Default snippets package
+-  Version tracking for defaults
+-  Protected snippet system
+
+**Security**
+-  Input sanitization layers
+-  Regular expression filters
+-  Strict capability checks
+
+**Performance**
+-  Optimized option storage
+-  Reduced DOM interactions
+-  Lazy-loaded code editor
+
+### [1.2.0] - 2025-02-14
+-  Initial public release
+
+## Support
+-  [Documentation](https://sparkwebstudio.com/docs/code-manager)  
+-  [Support Portal](https://sparkwebstudio.com/support)  
+-  [GitHub Issues](https://github.com/sparkwebstudio/code-manager/issues)
+
+## Contribution
 ```bash
-git clone [repository-url] wp-content/plugins/code-manager
+# Clone repo
+git clone https://github.com/sparkwebstudio/code-manager.git
 
-2.	Activate plugin:
+# Install dev dependencies
+composer install
 
-WordPress Admin → Plugins → Code Manager → Activate
-
-3.	Access interface:
-
-WordPress Admin → Code Manager → Add New Snippet
-
-Usage
-Adding Snippets
-	1.	Navigate to Code Manager
-	2.	Enter snippet name
-	3.	Select code type (CSS/JS)
-	4.	Write/paste code
-	5.	Save snippet
-Managing Snippets
-	•	Toggle active state with switches
-	•	Delete unwanted snippets
-	•	Real-time code validation
-	•	Automatic browser reload on changes
-Best Practices
-	1.	Test snippets in staging first
-	2.	Use descriptive names
-	3.	Keep CSS snippets under 500 lines
-	4.	Use IIFE for JavaScript snippets
-	5.	Regularly audit active snippets
-Contributing
-We welcome contributions! Please follow these steps:
-	1.	Fork repository
-	2.	Create feature branch:
-git checkout -b feature/amazing-feature
-	3.	Commit changes
-	4.	Push to branch
-	5.	Open Pull Request
-Support
-Professional support available through:
-	•	SPARKWEB Studio Website
-	•	GitHub Issues
-	•	Email: support@sparkwebstudio.com
-License
-GPL-3.0 © SPARKWEB Studio
+# Build production zip
+composer build

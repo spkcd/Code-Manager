@@ -1,9 +1,34 @@
 jQuery(function($) {
-    // Save new snippet
+    let codeEditor;
+
+    // Initialize CodeMirror
+    function initCodeEditor(type) {
+        const editorSettings = wp.codeEditor.defaultSettings;
+        editorSettings.codemirror.mode = type === 'css' ? 'css' : 'javascript';
+        
+        if(codeEditor) {
+            codeEditor.destroy();
+        }
+
+        codeEditor = wp.codeEditor.initialize($('#cmSnippetCode'), editorSettings);
+    }
+
+    // Type Change Handler
+    $('#cmSnippetType').on('change', function() {
+        initCodeEditor($(this).val());
+    });
+
+    // Initial Editor Setup
+    initCodeEditor($('#cmSnippetType').val());
+
+    // Form Submission
     $('#cmAddSnippetForm').on('submit', function(e) {
         e.preventDefault();
-        
-        const data = {
+
+        // Update textarea with editor content
+        codeEditor.codemirror.save();
+
+        const formData = {
             action: 'cm_save_snippet',
             security: cmData.nonce,
             name: $('#cmSnippetName').val(),
@@ -11,26 +36,32 @@ jQuery(function($) {
             code: $('#cmSnippetCode').val()
         };
 
-        $.post(cmData.ajaxUrl, data, function(response) {
+        $.post(cmData.ajaxUrl, formData, function(response) {
             if (response.success) {
                 location.reload();
             }
         });
     });
 
-    // Toggle snippet status
+    // Toggle Snippet
     $('.cm-toggle-snippet').on('click', function() {
         const $row = $(this).closest('tr');
         const snippetId = $row.data('snippet-id');
-        const $checkbox = $row.find('input[type="checkbox"]');
-        const newStatus = !$checkbox.prop('checked');
 
-        updateSnippetStatus(snippetId, newStatus);
+        $.post(cmData.ajaxUrl, {
+            action: 'cm_toggle_snippet',
+            security: cmData.nonce,
+            snippet_id: snippetId
+        }, function(response) {
+            if (response.success) {
+                location.reload();
+            }
+        });
     });
 
-    // Delete snippet
+    // Delete Snippet
     $('.cm-delete-snippet').on('click', function() {
-        if (!confirm('Are you sure you want to delete this snippet?')) return;
+        if (!confirm(cmData.i18n.confirmDelete)) return;
 
         const $row = $(this).closest('tr');
         const snippetId = $row.data('snippet-id');
@@ -41,69 +72,8 @@ jQuery(function($) {
             snippet_id: snippetId
         }, function(response) {
             if (response.success) {
-                $row.remove();
+                $row.fadeOut(300, () => $row.remove());
             }
         });
     });
-
-    function updateSnippetStatus(snippetId, status) {
-        $.post(cmData.ajaxUrl, {
-            action: 'cm_update_snippet_status',
-            security: cmData.nonce,
-            snippet_id: snippetId,
-            status: status
-        }, function(response) {
-            if (response.success) {
-                location.reload();
-            }
-        });
-    }
-});
-
-jQuery(function($) {
-    let codeEditor;
-    
-    // Initialize CodeMirror
-    function initCodeEditor(type) {
-        const editorSettings = wp.codeEditor.defaultSettings;
-        editorSettings.codemirror.mode = type === 'css' ? 'css' : 'javascript';
-        editorSettings.codemirror.extraKeys = {
-            'Ctrl-Space': 'autocomplete',
-            'Tab': function(cm) {
-                if (cm.somethingSelected()) {
-                    cm.indentSelection('add');
-                } else {
-                    cm.execCommand('insertSoftTab');
-                }
-            }
-        };
-
-        if(codeEditor) {
-            codeEditor.destroy();
-        }
-
-        codeEditor = wp.codeEditor.initialize($('#cmSnippetCode'), editorSettings);
-    }
-
-    // Handle type change
-    $('#cmSnippetType').on('change', function() {
-        initCodeEditor($(this).val());
-    });
-
-    // Initial editor setup
-    initCodeEditor($('#cmSnippetType').val());
-
-    // Handle form submit
-    $('#cmAddSnippetForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        // Update textarea with editor content
-        if(codeEditor) {
-            codeEditor.codemirror.save();
-        }
-        
-        // ... rest of existing submit code ...
-    });
-
-    // ... rest of existing code ...
 });
