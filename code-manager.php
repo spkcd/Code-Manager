@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Code Manager
  * Description: Manage and toggle CSS/JS code snippets
- * Version: 1.3.0
+ * Version: 1.4.0
  * Author: SPARKWEB Studio
  * Author URI: https://sparkwebstudio.com/
  * License: GPL-3.0
@@ -12,7 +12,7 @@
 defined('ABSPATH') || exit;
 
 // Define constants
-define('CM_VERSION', '1.3.0');
+define('CM_VERSION', '1.4.0');
 define('CM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CM_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -26,9 +26,18 @@ function cm_initialize_plugin() {
         Code_Manager\Includes\CM_Loader::init();
     } else {
         add_action('admin_notices', function() {
-            echo '<div class="notice notice-error"><p>';
-            _e('Code Manager failed to initialize. Please reinstall.', 'code-manager');
-            echo '</p></div>';
+            echo '<div class="notice notice-error"><p>' 
+                . esc_html__('Code Manager failed to initialize. Please reinstall.', 'code-manager')
+                . '</p></div>';
         });
     }
+}
+
+// Add settings link
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'cm_plugin_settings_link');
+function cm_plugin_settings_link($links) {
+    array_unshift($links, ' <a href="admin.php?page=code-manager">' 
+        . esc_html__('Manage Snippets', 'code-manager') 
+        . '</a>');
+    return $links;
 }

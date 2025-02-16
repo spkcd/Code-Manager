@@ -118,3 +118,60 @@ tr[data-snippet-id^="cm_default_"] .cm-delete-snippet {
 tr[data-snippet-id^="cm_default_"] .cm-toggle-snippet {
     margin-right: 0;
 }
+
+/* Default Snippet Protection */
+tr[data-snippet-id^="cm_default_"] .cm-delete-snippet {
+    display: none !important;
+}
+
+tr[data-snippet-id^="cm_default_"] .cm-toggle-snippet {
+    margin-right: 0;
+}
+
+.cm-default-badge {
+    background: #2271b1;
+    color: white;
+    font-size: 0.75em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* Add these styles at the end of the file */
+.cm-tools-section {
+    background: #fff;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.cm-tools-section h2 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.3em;
+}
+
+#cm-install-defaults {
+    margin-right: 10px;
+}
+
+.cm-tools-section p.description {
+    margin: 10px 0 0;
+    color: #666;
+    font-style: italic;
+}
+
+
+.cm-edit-snippet {
+    background: #2271b1;
+    color: white;
+    border-color: #2271b1;
+    margin-right: 8px;
+}
+
+.cm-edit-snippet:hover {
+    background: #135e96;
+    color: white;
+}

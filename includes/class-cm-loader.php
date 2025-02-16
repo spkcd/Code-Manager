@@ -5,7 +5,7 @@ defined('ABSPATH') || exit;
 
 class CM_Loader {
     const DEFAULT_SNIPPETS_VERSION = '1.3.0';
-    
+
     public static function init() {
         register_activation_hook(CM_PLUGIN_DIR . 'code-manager.php', [__CLASS__, 'activate_plugin']);
         
@@ -48,34 +48,52 @@ class CM_Loader {
         \Code_Manager\Public\CM_Public::init();
     }
 
-    private static function load_default_snippets() {
-        $defaults_file = CM_PLUGIN_DIR . 'includes/default-snippets.json';
+    public static function load_default_snippets($force = false) { // ✅ Public access
+        $defaults_path = CM_PLUGIN_DIR . 'includes/default-snippets.json';
         
-        if (!file_exists($defaults_file)) {
-            error_log('Code Manager: Default snippets file missing');
-            return;
+        // Debug path
+        error_log('[Code Manager] Defaults Path: ' . $defaults_path);
+    
+        if (!file_exists($defaults_path)) {
+            throw new \Exception(__('Defaults file missing', 'code-manager'));
         }
-
-        $default_snippets = json_decode(file_get_contents($defaults_file), true);
-        $existing_snippets = get_option('cm_code_snippets', []);
-        $defaults_installed = get_option('cm_defaults_installed', '0');
-
-        if (version_compare($defaults_installed, self::DEFAULT_SNIPPETS_VERSION, '<')) {
-            foreach ($default_snippets as $snippet) {
-                if (!isset($existing_snippets[$snippet['id']])) {
-                    $existing_snippets[$snippet['id']] = [
-                        'name' => sanitize_text_field($snippet['name']),
-                        'type' => in_array($snippet['type'], ['css', 'js']) ? $snippet['type'] : 'css',
-                        'code' => $snippet['code'],
-                        'active' => (bool) $snippet['active'],
-                        'created' => current_time('mysql'),
-                        'is_default' => true
-                    ];
-                }
+    
+        $json = file_get_contents($defaults_path);
+        if (!$json) {
+            throw new \Exception(__('Could not read defaults file', 'code-manager'));
+        }
+    
+        $default_snippets = json_decode($json, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($default_snippets)) {
+            throw new \Exception(__('Invalid JSON format', 'code-manager'));
+        }
+    
+        $current_snippets = get_option('cm_code_snippets', []);
+        $existing_ids = array_flip(array_keys($current_snippets));
+    
+        foreach ($default_snippets as $snippet) {
+            $snippet_id = isset($snippet['id']) ? $snippet['id'] : uniqid('cm_default_');
+            
+            // Force overwrite existing defaults 
+            if ($force && isset($current_snippets[$snippet_id]['is_default'])) {
+                unset($current_snippets[$snippet_id]);
             }
-
-            update_option('cm_code_snippets', $existing_snippets);
-            update_option('cm_defaults_installed', self::DEFAULT_SNIPPETS_VERSION);
+    
+            if (!isset($current_snippets[$snippet_id])) {
+                $current_snippets[$snippet_id] = [
+                    'name' => sanitize_text_field($snippet['name']),
+                    'type' => in_array($snippet['type'], ['css', 'js']) ? $snippet['type'] : 'css',
+                    'code' => isset($snippet['code']) ? $snippet['code'] : '',
+                    'active' => false,
+                    'created' => current_time('mysql'),
+                    'is_default' => true
+                ];
+                
+                error_log('[Code Manager] Added default snippet: ' . $snippet_id);
+            }
         }
+    
+        update_option('cm_code_snippets', $current_snippets);
+        update_option('cm_defaults_installing', current_time('mysql'));
     }
 }

@@ -1,4 +1,4 @@
-# Code Manager ![WordPress Plugin Version](https://img.shields.io/badge/Version-1.3.0-blue) ![License](https://img.shields.io/badge/License-GPL--3.0-green)
+# Code Manager ![WordPress Plugin Version](https://img.shields.io/badge/Version-1.4.0-blue) ![License](https://img.shields.io/badge/License-GPL--3.0-green)
 
 ![Code Manager Interface](assets/banner-1544x500.png)
 
@@ -7,98 +7,81 @@ Professional code snippet management for WordPress, developed by [SPARKWEB Studi
 ## Features
 
 ### Core Functionality
--  **Default Snippets Package**  
-  Pre-installed curated snippets for common use cases (Safari fixes, CSS resets, etc)
--  **Protected Defaults**  
-  Default snippets can't be deleted, only enabled/disabled
--  **Multi-Type Support**  
-  Manage CSS and JavaScript snippets separately
--  **Version Control**  
-  Track default snippet package versions
+-  **Inline Editing**: Edit snippets directly in the interface   
+-  **Default Snippets Package**: Pre-installed curated snippets for common use cases  
+-  **Real-time Updates**: Toggle snippets without page reloads  
+-  **Version Control**: Track default snippet versions  
 
 ### Security
--  **Input Hardening**  
-  Code sanitization with WPCS standards
--  **Role-Based Access**  
-  Requires `manage_options` capability
--  **Nonce Verification**  
-  All AJAX actions protected
--  **Audit Logging**  
-  Error logging for suspicious activities
+-  **Input Sanitization**: WPCS-compliant code cleaning  
+-  **Role-Based Access**: `manage_options` capability required  
+-  **Nonce Verification**: All AJAX actions protected  
+-  **Audit Logging**: Error tracking for security events  
 
 ### Performance
--  **Selective Loading**  
-  Only active snippets load on frontend
--  **Cache Optimization**  
-  Version-busted asset loading
--  **Lightweight Core**  
-  <50KB base plugin footprint
--  **Efficient Storage**  
-  Single option record in database
+-  **Selective Loading**: Only active snippets on frontend  
+-  **Caching**: Versioned asset loading  
+-  **Lightweight**: 55KB core footprint  
+-  **Efficient Storage**: Single database option  
 
 ## Installation
-
-1. **Upload Plugin**  
-   Through WordPress admin → Plugins → Add New
-
-2. **Activate Plugin**  
-   Default snippets will auto-install on activation
-
-3. **Access Interface**  
-   Navigate to **Code Manager** in admin sidebar
+1. **Upload Plugin**: WordPress admin → Plugins → Add New  
+2. **Activate**: Default snippets auto-install  
+3. **Access**: **Code Manager** in admin sidebar  
 
 ## Usage
-
-### Managing Snippets
--  **Toggle Defaults**  
-  Enable/disable pre-installed snippets
--  **Add Custom Code**  
-  Create new CSS/JS snippets
--  **Bulk Actions**  
-  Toggle multiple snippets at once
+### Key Actions
+-  🛠️ **Edit**: Click any snippet's Edit button  
+-  ✅ **Toggle**: Switches update in real-time  
+-  🗑️ **Delete**: Removes custom snippets (defaults protected)  
+-  🔄 **Restore**: Use *Install Defaults* for system snippets  
 
 ![Admin Interface](assets/screenshot-1.png)
 
 ### Best Practices
-1. Test snippets in staging first
-2. Use descriptive names
-3. Keep CSS under 500 lines
-4. Use IIFE for JavaScript
-5. Audit active snippets monthly
+1. **Test First**: Use staging for new snippets  
+2. **Name Clearly**: e.g., "Header CSS Optimization"  
+3. **Size Limits**: CSS ≤500 lines, JS ≤1000 lines  
+4. **Modern JS**: Use IIFE/scoped variables  
 
 ## Changelog
 
+### [1.4.0] - 2025-02-17
+**Added**  
+-  ✨ Inline Snippet Editing  
+-  ⏳ UI loading states  
+-  🌍 7 translation-ready strings  
+
+**Fixed**  
+-  🐛 Toggle button errors  
+-  💥 Editor initialization crashes  
+-  🚷 Concurrent AJAX conflicts  
+
+**Security**  
+-  🔒 Nonce validation hardening  
+-  🧼 Enhanced input sanitization  
+
 ### [1.3.0] - 2025-02-15
-**Added**
--  Default snippets package
--  Version tracking for defaults
--  Protected snippet system
-
-**Security**
--  Input sanitization layers
--  Regular expression filters
--  Strict capability checks
-
-**Performance**
--  Optimized option storage
--  Reduced DOM interactions
--  Lazy-loaded code editor
+**Added**: Default snippets, version tracking  
+**Security**: Input filters, capability checks  
+**Perf**: Lazy editor, optimized storage  
 
 ### [1.2.0] - 2025-02-14
--  Initial public release
+Initial public release  
 
-## Support
--  [Documentation](https://sparkwebstudio.com/docs/code-manager)  
--  [Support Portal](https://sparkwebstudio.com/support)  
--  [GitHub Issues](https://github.com/sparkwebstudio/code-manager/issues)
+## Support  
+-  📚 [Documentation](https://sparkwebstudio.com/docs/code-manager)  
+-  🛠️ [Support Portal](https://sparkwebstudio.com/support)  
+-  📝 [GitHub Issues](https://github.com/sparkwebstudio/code-manager/issues)  
 
-## Contribution
+## Contribution  
 ```bash
-# Clone repo
-git clone https://github.com/sparkwebstudio/code-manager.git
+# Clone & setup
+git clone https://github.com/sparkwebstudio/code-manager.git && cd code-manager
+npm install && composer install
 
-# Install dev dependencies
-composer install
+# Development
+npm run watch  # Live CSS/JS updates
 
-# Build production zip
-composer build
+# Build
+composer build  # Creates production zip
