@@ -1,214 +1,177 @@
-(function($) {
-    'use strict';
-
-    let codeEditor = null;
-
-    // Initialize CodeMirror Editor
-    function initCodeEditor(type) {
-        if (!wp || !wp.codeEditor) {
-            console.error('WordPress code editor library not loaded');
-            return;
-        }
-
-        const editorSettings = wp.codeEditor.defaultSettings;
-        editorSettings.codemirror.mode = type === 'css' ? 'css' : 'javascript';
-
-        // If editor exists, update mode
-        if (codeEditor) {
-            codeEditor.codemirror.setOption('mode', editorSettings.codemirror.mode);
-            return;
-        }
-
-        // Initialize editor
-        const textarea = document.getElementById('cmSnippetCode');
-        if (!textarea) {
-            console.error('Could not find code textarea');
-            return;
-        }
-
-        codeEditor = wp.codeEditor.initialize(textarea, editorSettings);
-    }
-
-    // Handle Code Type Changes
+jQuery(document).ready(function($) {
     $('#cmSnippetType').on('change', function() {
-        initCodeEditor($(this).val());
+        if ($(this).val() === 'js') {
+            $('#cmSnippetPageSelector').show();
+        } else if ($(this).val() === 'php') {
+            $('#cmSnippetPageSelector').hide();
+            alert(cmData.i18n.phpNotAllowed);
+        } else {
+            $('#cmSnippetPageSelector').hide();
+        }
     });
 
-    // Initial Setup
-    initCodeEditor($('#cmSnippetType').val());
+    let currentSnippetId = null;
 
-    // ----------------------
-    // SAVE SNIPPET
-    // ----------------------
+    $('.cm-edit-snippet').on('click', function() {
+        const snippetId = $(this).closest('tr').data('snippet-id');
+        currentSnippetId = snippetId;
+
+        $.get(cmData.ajaxUrl, {
+            action: 'cm_get_snippet',
+            snippet_id: snippetId,
+            security: cmData.nonce
+        }, function(response) {
+            if (response.success) {
+                const snippet = response.data;
+                $('#cmSnippetName').val(snippet.name);
+                $('#cmSnippetType').val(snippet.type);
+                $('#cmSnippetCode').val(snippet.code);
+                if (snippet.type === 'js') {
+                    $('#cmSnippetPageSelector').show();
+                    $('#cmSnippetPage').val(snippet.page_id);
+                } else {
+                    $('#cmSnippetPageSelector').hide();
+                }
+                $('#cmAddSnippetForm').find('button[type="submit"]').text(cmData.i18n.updateSnippet);
+            }
+        });
+    });
+
+
     $('#cmAddSnippetForm').on('submit', function(e) {
         e.preventDefault();
 
-        if (!codeEditor) {
-            alert('Code editor not initialized');
+        const data = {
+            action: 'cm_save_snippet',
+            name: $('#cmSnippetName').val(),
+            type: $('#cmSnippetType').val(),
+            code: $('#cmSnippetCode').val(),
+            page_id: $('#cmSnippetPage').val(),
+            security: cmData.nonce
+        };
+
+        if (currentSnippetId) {
+            data.snippet_id = currentSnippetId;
+        }
+
+        $.post(cmData.ajaxUrl, data, function(response) {
+            if (response.success) {
+                location.reload();
+            } else {
+                alert(cmData.i18n.saveFailed);
+            }
+        });
+    });
+
+
+    $('.cm-delete-snippet').on('click', function() {
+        if (!confirm(cmData.i18n.confirmDelete)) {
             return;
         }
 
-        codeEditor.codemirror.save();
+        const snippetId = $(this).closest('tr').data('snippet-id');
 
-        const $form = $(this);
-        const data = {
-            action: 'cm_save_snippet',
-            security: cmData.nonce,
-            name: $('#cmSnippetName').val(),
-            type: $('#cmSnippetType').val(),
-            code: $('#cmSnippetCode').val()
-        };
-
-        const isEditing = $form.data('editing');
-        if (isEditing) {
-            data.snippet_id = isEditing;
-        }
-
-        $form.find('button').prop('disabled', true).text(cmData.i18n.saving);
-
-        $.post(cmData.ajaxUrl, data)
-            .done(function(response) {
-                if (response.success) {
-                    codeEditor.codemirror.setValue('');
-                    $form.trigger('reset').removeData('editing');
-                    location.reload();
-                }
-            })
-            .fail(function(jqXHR) {
-                alert(cmData.i18n.saveFailed);
-                console.error('Save Error:', jqXHR);
-            });
-    });
-
-    // ----------------------
-    // EDIT SNIPPET
-    // ----------------------
-    $(document).on('click', '.cm-edit-snippet', function(e) {
-        e.preventDefault();
-        const $button = $(this);
-        const $row = $button.closest('tr');
-        const snippetId = $row.data('snippet-id');
-
-        $button.prop('disabled', true).text(cmData.i18n.loading);
-
-        $.ajax({
-            url: cmData.ajaxUrl,
-            dataType: 'json',
-            data: {
-                action: 'cm_get_snippet',
-                security: cmData.nonce,
-                snippet_id: snippetId
-            }
-        }).done(function(response) {
-            if (response.success) {
-                const snippet = response.data;
-                
-                // Update form fields
-                $('#cmSnippetName').val(snippet.name);
-                $('#cmSnippetType').val(snippet.type).trigger('change');
-
-                // Delay setting value to ensure editor is ready
-                setTimeout(() => {
-                    if (codeEditor) {
-                        codeEditor.codemirror.setValue(snippet.code);
-                        codeEditor.codemirror.refresh();
-                    }
-                }, 100);
-
-                // Update form state
-                $('#cmAddSnippetForm')
-                    .data('editing', snippetId)
-                    .find('button[type="submit"]')
-                    .text(cmData.i18n.updateSnippet);
-            }
-        }).fail(function(jqXHR) {
-            alert(cmData.i18n.editFailed);
-            console.error('Edit Error:', jqXHR);
-        }).always(function() {
-            $button.prop('disabled', false).text(cmData.i18n.edit);
-        });
-    });
-
-// ----------------------
-// TOGGLE SNIPPET 1.4
-// ----------------------
-$('.cm-toggle-snippet').on('click', function() {
-    const $btn = $(this);
-    const $row = $btn.closest('tr');
-    const snippetId = $row.data('snippet-id');
-    const $checkbox = $row.find('input[type="checkbox"]');
-    const currentState = $checkbox.prop('checked');
-    
-    // Disable during request
-    $checkbox.prop('disabled', true);
-
-    $.post(cmData.ajaxUrl, {
-        action: 'cm_toggle_snippet',
-        security: cmData.nonce,
-        snippet_id: snippetId
-    }).done(function() {
-        $checkbox.prop('checked', !currentState);
-    }).fail(function(jqXHR) {
-        console.error('Toggle Error:', jqXHR);
-        $checkbox.prop('checked', currentState);
-    }).always(function() {
-        $checkbox.prop('disabled', false);
-    });
-});
-
-    // ----------------------
-    // DELETE SNIPPET
-    // ----------------------
-    $('.cm-delete-snippet').on('click', function() {
-        if (!confirm(cmData.i18n.confirmDelete)) return;
-        
-        const $row = $(this).closest('tr');
-        const snippetId = $row.data('snippet-id');
-        
         $.post(cmData.ajaxUrl, {
             action: 'cm_delete_snippet',
-            security: cmData.nonce,
-            snippet_id: snippetId
-        }).done(function(response) {
+            snippet_id: snippetId,
+            security: cmData.nonce
+        }, function(response) {
             if (response.success) {
-                $row.fadeOut(300, function() {
-                    $(this).remove();
-                });
+                location.reload();
             }
         });
     });
 
-    // ----------------------
-    // INSTALL DEFAULTS
-    // ----------------------
-    $('#cm-install-defaults').on('click', function(e) {
-        e.preventDefault();
-        const $button = $(this);
-        const originalText = $button.text();
+    $('#cm-install-defaults').on('click', function() {
+        if (!confirm(cmData.i18n.confirmInstall)) {
+            return;
+        }
 
-        if (!confirm(cmData.i18n.confirmInstall)) return;
+        $(this).prop('disabled', true).text(cmData.i18n.installing);
 
-        $button
-            .prop('disabled', true)
-            .text(cmData.i18n.installing);
+        $.post(cmData.ajaxUrl, {
+            action: 'cm_install_defaults',
+            security: cmData.nonce
+        }, function(response) {
+            $('#cm-install-defaults').prop('disabled', false).text(cmData.i18n.installDefaults);
 
-        $.post(
-            cmData.ajaxUrl,
-            { action: 'cm_install_defaults', security: cmData.nonce }
-        ).done(function(response) {
             if (response.success) {
                 alert(cmData.i18n.installSuccess);
                 location.reload();
             } else {
                 alert(cmData.i18n.installFailed + ': ' + response.data);
             }
-        }).fail(function(jqXHR) {
-            alert(cmData.i18n.installFailed + ': ' + jqXHR.statusText);
-        }).always(function() {
-            $button
-                .prop('disabled', false)
-                .text(originalText);
         });
     });
 
-})(jQuery);
+    $('.cm-toggle-snippet').on('click', function() {
+        const snippetId = $(this).closest('tr').data('snippet-id');
+        const isActive = $('#cmToggle' + snippetId).is(':checked');
+
+        $.post(cmData.ajaxUrl, {
+            action: 'cm_toggle_snippet',
+            snippet_id: snippetId,
+            active: isActive ? 1 : 0,
+            security: cmData.nonce
+        }, function(response) {
+            if (response.success) {
+                location.reload();
+            }
+        });
+    });
+
+    $('#cm-export-defaults').on('click', function() {
+        $.post(cmData.ajaxUrl, {
+            action: 'cm_export_defaults',
+            security: cmData.nonce
+        }, function(response) {
+            if (response.success) {
+                // Create a temporary link to download the JSON data
+                const blob = new Blob([JSON.stringify(response.data, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'code-manager-default-snippets.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else {
+                alert(cmData.i18n.exportFailed);
+            }
+        });
+    });
+
+    $('#cm-import-defaults').on('click', function() {
+        if (!confirm(cmData.i18n.confirmImport)) {
+            return;
+        }
+
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    $.post(cmData.ajaxUrl, {
+                        action: 'cm_import_defaults',
+                        snippets: content,
+                        security: cmData.nonce
+                    }, function(response) {
+                        if (response.success) {
+                            alert(cmData.i18n.importSuccess);
+                            location.reload();
+                        } else {
+                            alert(cmData.i18n.importFailed + ': ' + response.data);
+                        }
+                    });
+                };
+                reader.readAsText(file);
+            }
+        };
+        input.click();
+    });
+});

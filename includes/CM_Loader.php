@@ -7,22 +7,22 @@ class CM_Loader {
     const DEFAULT_SNIPPETS_VERSION = '1.3.0';
 
     public static function init() {
-        register_activation_hook(CM_PLUGIN_DIR . 'code-manager.php', [__CLASS__, 'activate_plugin']);
+        register_activation_hook(plugin_basename(CM_PLUGIN_DIR . 'code-manager.php'), [__CLASS__, 'activate_plugin']);
         
         try {
-            self::load_dependencies();
-            self::initialize_components();
-        } catch (\Exception $e) {
-            add_action('admin_notices', function() use ($e) {
-                echo '<div class="notice notice-error"><p>';
-                printf(
-                    esc_html__('Code Manager Error: %s', 'code-manager'),
-                    esc_html($e->getMessage())
-                );
-                echo '</p></div>';
-            });
-        }
+        self::load_dependencies();
+        self::initialize_components();
+    } catch (\Exception $e) {
+        add_action('admin_notices', function() use ($e) {
+            echo '<div class="notice notice-error"><p>';
+            printf(
+                esc_html__('Code Manager Error: %s', 'code-manager'),
+                esc_html($e->getMessage())
+            );
+            echo '</p></div>';
+        });
     }
+  }
 
     public static function activate_plugin() {
         self::load_default_snippets();
@@ -48,7 +48,7 @@ class CM_Loader {
         \Code_Manager\Public\CM_Public::init();
     }
 
-    public static function load_default_snippets($force = false) { // ✅ Public access
+    private static function load_default_snippets($force = false) {
         $defaults_path = CM_PLUGIN_DIR . 'includes/default-snippets.json';
         
         // Debug path
@@ -95,5 +95,15 @@ class CM_Loader {
     
         update_option('cm_code_snippets', $current_snippets);
         update_option('cm_defaults_installing', current_time('mysql'));
+    }
+
+    public static function install_default_snippets() {
+        $installing_time = get_option('cm_defaults_installing', null);
+        $default_snippets_version = get_option('cm_default_snippets_version', '0.0.0');
+
+        if ($default_snippets_version !== self::DEFAULT_SNIPPETS_VERSION || !$installing_time) {
+            self::load_default_snippets(true); // Force overwrite if versions mismatch or no install time
+            update_option('cm_default_snippets_version', self::DEFAULT_SNIPPETS_VERSION);
+        }
     }
 }

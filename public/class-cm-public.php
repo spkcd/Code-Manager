@@ -11,32 +11,22 @@ class CM_Public {
     }
 
     public static function enqueue_snippets() {
-        // Register dummy handles
-        wp_register_style('code-manager', false, [], CM_VERSION);
-        wp_register_script('code-manager', false, [], CM_VERSION, true);
-
         $snippets = get_option(self::$snippets_option, []);
-        $css = '';
-        $js = '';
 
         foreach ($snippets as $snippet) {
             if (!$snippet['active']) continue;
 
             if ('css' === $snippet['type']) {
-                $css .= $snippet['code'] . "\n";
+                wp_add_inline_style('theme-style', $snippet['code']); // Assuming 'theme-style' is the main theme stylesheet handle
             } else {
-                $js .= $snippet['code'] . "\n";
+                // JS snippets with page selector
+                $page_id = isset($snippet['page_id']) ? absint($snippet['page_id']) : 0;
+                if ($page_id > 0 && is_page($page_id)) {
+                    wp_add_inline_script('jquery', $snippet['code']); // Enqueue JS snippets only on selected pages
+                } else if ($page_id === 0) {
+                    wp_add_inline_script('jquery', $snippet['code']); // Enqueue JS snippets on all pages if no page is selected
+                }
             }
-        }
-
-        if (!empty($css)) {
-            wp_enqueue_style('code-manager');
-            wp_add_inline_style('code-manager', $css);
-        }
-
-        if (!empty($js)) {
-            wp_enqueue_script('code-manager');
-            wp_add_inline_script('code-manager', $js);
         }
     }
 }
