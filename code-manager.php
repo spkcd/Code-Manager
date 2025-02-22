@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Code Manager
  * Description: Manage and toggle CSS/JS code snippets
- * Version: 1.4.0
+ * Version: 1.7.0
  * Author: SPARKWEB Studio
  * Author URI: https://sparkwebstudio.com/
  * License: GPL-3.0

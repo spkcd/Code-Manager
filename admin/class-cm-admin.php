@@ -90,62 +90,58 @@ class CM_Admin {
         );
     }
 
-    public static function enqueue_assets($hook) {
-        if ('toplevel_page_code-manager' !== $hook) return;
+  public static function enqueue_assets($hook) {
+    if ('toplevel_page_code-manager' !== $hook) return;
 
-        wp_enqueue_code_editor(array('type' => 'text/css'));
-        wp_enqueue_script('wp-theme-plugin-editor');
-        wp_enqueue_style('wp-codemirror');
+    // Enqueue Ace Editor
+    wp_enqueue_script('ace', CM_PLUGIN_URL . 'admin/js/ace/ace.js', array(), '1.32.7', true);
+    wp_enqueue_script('ace-mode-css', CM_PLUGIN_URL . 'admin/js/ace/mode-css.js', array('ace'), '1.32.7', true);
+    wp_enqueue_script('ace-mode-javascript', CM_PLUGIN_URL . 'admin/js/ace/mode-javascript.js', array('ace'), '1.32.7', true);
+    wp_enqueue_script('ace-mode-php', CM_PLUGIN_URL . 'admin/js/ace/mode-php.js', array('ace'), '1.32.7', true);
+     wp_enqueue_script('ace-theme-monokai', CM_PLUGIN_URL . 'admin/js/ace/theme-monokai.js', array('ace'), '1.32.7', true);
+     wp_enqueue_script('ace-theme-github', CM_PLUGIN_URL . 'admin/js/ace/theme-github.js', array('ace'), '1.32.7', true);
+    // Enqueue our custom script
+    wp_enqueue_script(
+        'cm-admin-js',
+        CM_PLUGIN_URL . 'admin/js/code-manager-admin.js',
+        array('jquery', 'wp-util', 'wp-i18n', 'ace'),
+        CM_VERSION,
+        true
+    );
 
-        wp_enqueue_style(
-            'cm-admin-css',
-            CM_PLUGIN_URL . 'admin/css/code-manager-admin.css',
-            array(),
-            CM_VERSION
-        );
-
-        wp_enqueue_script(
-            'cm-admin-js',
-            CM_PLUGIN_URL . 'admin/js/code-manager-admin.js',
-            array('jquery', 'wp-util', 'wp-i18n'),
-            CM_VERSION,
-            true
-        );
-
-        $pages = get_pages();
-        $page_options = array();
-        foreach ($pages as $page) {
-            $page_options[$page->ID] = $page->post_title;
-        }
-
-
-        wp_localize_script('cm-admin-js', 'cmData', array(
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('cm_ajax_nonce'),
-            'pages' => $page_options,
-            'i18n' => array(
-                'confirmDelete' => __('Are you sure you want to delete this snippet?', 'code-manager'),
-                'confirmInstall' => __('This will install predefined snippets. Continue?', 'code-manager'),
-                'confirmImport' => __('This will import default snippets. Existing default snippets with the same ID will be skipped. Continue?', 'code-manager'),
-                'installSuccess' => __('Default snippets installed successfully!', 'code-manager'),
-                'installFailed' => __('Failed to install defaults.', 'code-manager'),
-                'installing' => __('Installing...', 'code-manager'),
-                'importSuccess' => __('Snippets imported successfully!', 'code-manager'),
-                'importFailed' => __('Failed to import snippets.', 'code-manager'),
-                'exportSuccess' => __('Snippets exported successfully!', 'code-manager'),
-                'exportFailed' => __('Failed to export snippets.', 'code-manager'),
-                'protectedSnippet' => __('Default snippets cannot be deleted', 'code-manager'),
-                'editSnippet' => __('Edit', 'code-manager'),
-                'updateSnippet' => __('Update Snippet', 'code-manager'),
-                'saving' => __('Saving...', 'code-manager'),
-                'saveFailed' => __('Failed to save snippet', 'code-manager'),
-                'allPages' => __('All Pages', 'code-manager'),
-                'phpNotAllowed' => __('Page selection is not available for PHP snippets.', 'code-manager')
-            )
-        ));
-
-        wp_set_script_translations('cm-admin-js', 'code-manager', CM_PLUGIN_DIR . 'languages/');
+    $pages = get_pages();
+    $page_options = array();
+    foreach ($pages as $page) {
+        $page_options[$page->ID] = $page->post_title;
     }
+
+    wp_localize_script('cm-admin-js', 'cmData', array(
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('cm_ajax_nonce'),
+        'pages' => $page_options,
+        'i18n' => array(
+            'confirmDelete' => __('Are you sure you want to delete this snippet?', 'code-manager'),
+            'confirmInstall' => __('This will install predefined snippets. Continue?', 'code-manager'),
+            'confirmImport' => __('This will import default snippets. Existing default snippets with the same ID will be skipped. Continue?', 'code-manager'),
+            'installSuccess' => __('Default snippets installed successfully!', 'code-manager'),
+            'installFailed' => __('Failed to install defaults.', 'code-manager'),
+            'installing' => __('Installing...', 'code-manager'),
+            'importSuccess' => __('Snippets imported successfully!', 'code-manager'),
+            'importFailed' => __('Failed to import snippets.', 'code-manager'),
+            'exportSuccess' => __('Snippets exported successfully!', 'code-manager'),
+            'exportFailed' => __('Failed to export snippets.', 'code-manager'),
+            'protectedSnippet' => __('Default snippets cannot be deleted', 'code-manager'),
+            'editSnippet' => __('Edit', 'code-manager'),
+            'updateSnippet' => __('Update Snippet', 'code-manager'),
+            'saving' => __('Saving...', 'code-manager'),
+            'saveFailed' => __('Failed to save snippet', 'code-manager'),
+        'allPages' => __('All Pages', 'code-manager'),
+            'phpNotAllowed' => __('Page selection is not available for PHP snippets.', 'code-manager')
+        ),
+        'defaultTheme' => 'github' // Set a default theme.
+    ));
+    wp_set_script_translations('cm-admin-js', 'code-manager', CM_PLUGIN_DIR . 'languages/');
+}
 
     public static function render_admin_page() {
         $snippets = get_option(self::$snippets_option, array());
@@ -184,7 +180,15 @@ class CM_Admin {
 
                     <div class="cm-field-group">
                         <label for="cmSnippetCode"><?php esc_html_e('Code:', 'code-manager'); ?></label>
-                        <textarea id="cmSnippetCode" rows="10" class="widefat"></textarea>
+                        <div id="cmSnippetCode" style="width: 100%; height: 200px;"></div>
+                    </div>
+
+                    <div class="cm-field-group">
+                        <label for="cmSnippetTheme"><?php esc_html_e('Editor Theme:', 'code-manager'); ?></label>
+                        <select id="cmSnippetTheme">
+                            <option value="github">GitHub</option>
+                            <option value="monokai">Monokai</option>
+                        </select>
                     </div>
 
                     <button type="submit" class="button button-primary">
@@ -394,6 +398,6 @@ public static function save_snippet() {
             wp_send_json_error(__('Snippet not found', 'code-manager'));
         }
 
-    wp_send_json_success($snippets[$snippet_id]);
+        wp_send_json_success($snippets[$snippet_id]);
   }
 }

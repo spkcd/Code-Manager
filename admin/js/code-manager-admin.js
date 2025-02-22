@@ -1,12 +1,51 @@
 jQuery(document).ready(function($) {
+    let editor;
+
+    function initializeEditor(mode) {
+        if (editor) {
+          editor.destroy();
+          editor = null;
+        }
+
+        editor = ace.edit("cmSnippetCode");
+        editor.setTheme("ace/theme/" + cmData.defaultTheme); // Use default theme
+        editor.session.setMode("ace/mode/" + mode);
+        // editor.setOptions({  // Moved to after initialization
+        //     enableBasicAutocompletion: true,
+        //     enableLiveAutocompletion: true,
+        //     enableSnippets: true
+        // });
+
+    }
+
+
     $('#cmSnippetType').on('change', function() {
-        if ($(this).val() === 'js') {
+        const selectedType = $(this).val();
+        if (selectedType === 'js') {
             $('#cmSnippetPageSelector').show();
-        } else if ($(this).val() === 'php') {
+            initializeEditor('javascript');
+            editor.setOptions({
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
+                enableSnippets: true
+            });
+        } else if (selectedType === 'php') {
             $('#cmSnippetPageSelector').hide();
             alert(cmData.i18n.phpNotAllowed);
+            initializeEditor('php');
+            editor.setOptions({
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
+                enableSnippets: true
+            });
         } else {
             $('#cmSnippetPageSelector').hide();
+            initializeEditor('css');
+            editor.setOptions({
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
+                enableSnippets: true
+            });
         }
     });
 
@@ -25,14 +64,38 @@ jQuery(document).ready(function($) {
                 const snippet = response.data;
                 $('#cmSnippetName').val(snippet.name);
                 $('#cmSnippetType').val(snippet.type);
-                $('#cmSnippetCode').val(snippet.code);
+
                 if (snippet.type === 'js') {
                     $('#cmSnippetPageSelector').show();
                     $('#cmSnippetPage').val(snippet.page_id);
-                } else {
+                    initializeEditor('javascript');
+                    editor.setOptions({
+                        enableBasicAutocompletion: true,
+                        enableLiveAutocompletion: true,
+                        enableSnippets: true
+                    });
+                } else if (snippet.type === 'php') {
                     $('#cmSnippetPageSelector').hide();
+                    initializeEditor('php');
+                    editor.setOptions({
+                        enableBasicAutocompletion: true,
+                        enableLiveAutocompletion: true,
+                        enableSnippets: true
+                    });
                 }
+                else {
+                    $('#cmSnippetPageSelector').hide();
+                    initializeEditor('css');
+                    editor.setOptions({
+                        enableBasicAutocompletion: true,
+                        enableLiveAutocompletion: true,
+                        enableSnippets: true
+                    });
+                }
+                // Set the value in the CodeMirror instance AFTER initialization
+                editor.setValue(snippet.code);
                 $('#cmAddSnippetForm').find('button[type="submit"]').text(cmData.i18n.updateSnippet);
+
             }
         });
     });
@@ -41,11 +104,15 @@ jQuery(document).ready(function($) {
     $('#cmAddSnippetForm').on('submit', function(e) {
         e.preventDefault();
 
+        // Get the value from the CodeMirror instance
+        const code = editor.getValue();
+
+
         const data = {
             action: 'cm_save_snippet',
             name: $('#cmSnippetName').val(),
             type: $('#cmSnippetType').val(),
-            code: $('#cmSnippetCode').val(),
+            code: code,
             page_id: $('#cmSnippetPage').val(),
             security: cmData.nonce
         };
@@ -174,4 +241,13 @@ jQuery(document).ready(function($) {
         };
         input.click();
     });
+
+    // Theme switching
+    $('#cmSnippetTheme').on('change', function() {
+      const theme = $(this).val();
+      editor.setTheme("ace/theme/" + theme);
+    });
+
+      // Initialize on load with CSS mode
+    initializeEditor('css');
 });
