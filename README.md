@@ -1,6 +1,4 @@
-# Code Manager ![WordPress Plugin Version](https://img.shields.io/badge/Version-1.6.0-blue) ![License](https://img.shields.io/badge/License-GPL--3.0-green)
-
-![Code Manager Interface](assets/banner-1544x500.png)
+# Code Manager ![WordPress Plugin Version](https://img.shields.io/badge/Version-1.7.0-blue) ![License](https://img.shields.io/badge/License-GPL--3.0-green)
 
 Professional code snippet management for WordPress, developed by [SPARKWEB Studio](https://sparkwebstudio.com/).
 
