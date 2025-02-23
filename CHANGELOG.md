@@ -1,12 +1,12 @@
 # Changelog
 
-## 1.7.1 (Upcoming)
+## 1.7.1 (2025-02-23)
 *   **Bugfix:** Fixed an issue where the "Edit" functionality was not working correctly due to incorrect editor initialization and a missing "code" property in the AJAX response.
 *   **Bugfix:** Fixed an issue where the "Versions" button would throw an error if no previous versions existed.
 *   **Improvement:** Added more granular control for snippet execution, with options for URL-based and hook-based conditions (for PHP snippets).
 *   **Improvement:** Added a theme selector to the admin interface (GitHub and Monokai themes included).
 
-## 1.7.0 (Upcoming)
+## 1.7.0 (2025-02-23)
 *   **Improvement:** Switched to Ace Editor for improved code editing experience (syntax highlighting, line numbers, theme selection).
 *   **Bugfix:** Fixed an issue where the code editor was not loading or saving snippets correctly.
 *   **Bugfix:** Fixed a fatal error caused by incorrect class referencing and execution timing.
@@ -26,7 +26,7 @@
 
 **Note:** Autocompletion features in the Ace Editor are currently not fully functional due to unresolved console warnings. This will be addressed in a future update.
 
-## 1.6.0 (2023-04-03)
+## 1.6.0 (2025-02-22)
 
 * **Security:** Made `CM_Loader::load_default_snippets()` private and added a new public method `CM_Loader::install_default_snippets()` to handle default snippet loading more securely.
 * **Bugfix:** Renamed `includes/class-cm-loader.php` to `includes/CM_Loader.php` to fix PSR-4 autoloading issue.
@@ -36,3 +36,33 @@
 * **Improvement:** CSS snippets are now enqueued similar to the Customizer function from the theme.
 * **New Feature:** JS snippets now have a page selector to assign the JS to that specific page.
 * **New Feature:** Added support for PHP snippets.
+
+## [1.3.0] - 2025-02-15
+### Added
+-   Default code snippets package
+-   Default snippet identification badges
+-   Version tracking for default snippets
+-   Protection for default snippets from deletion
+
+## [1.2.0] - 2025-02-15
+### Added
+-  Complete snippet management system
+-  CodeMirror integration with syntax highlighting
+-  Toggle/Delete functionality
+-  Frontend code output
+-  Comprehensive security checks
+
+## [1.1.0] - 2025-02-14
+### Added
+-  Code syntax highlighting using WordPress CodeMirror integration
+-  Language-aware editing (CSS/JavaScript)
+-  Auto-completion and linting features
+-  Improved editor UI with line numbers
+
+## [1.0.0] - 2025-02-10
+### Initial Release
+-  Snippet management system for CSS/JS
+-  Toggle activation system
+-  Admin dashboard interface
+-  AJAX-powered controls
+-  Security hardening
