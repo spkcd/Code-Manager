@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Code Manager
  * Description: Manage and toggle CSS/JS code snippets
- * Version: 1.7.0
+ * Version: 1.7.1
  * Author: SPARKWEB Studio
  * Author URI: https://sparkwebstudio.com/
  * License: GPL-3.0
@@ -12,11 +12,10 @@
 defined('ABSPATH') || exit;
 
 // Define constants
-define('CM_VERSION', '1.4.0');
+define('CM_VERSION', '1.7.1');
 define('CM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CM_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-// Loader class
 // Loader class
 require_once CM_PLUGIN_DIR . 'includes/CM_Loader.php';
 

@@ -4,7 +4,7 @@ namespace Code_Manager\Includes;
 defined('ABSPATH') || exit;
 
 class CM_Loader {
-    const DEFAULT_SNIPPETS_VERSION = '1.3.0';
+    const DEFAULT_SNIPPETS_VERSION = '1.7.0';
 
     public static function init() {
         register_activation_hook(plugin_basename(CM_PLUGIN_DIR . 'code-manager.php'), [__CLASS__, 'activate_plugin']);
@@ -82,7 +82,7 @@ class CM_Loader {
             if (!isset($current_snippets[$snippet_id])) {
                 $current_snippets[$snippet_id] = [
                     'name' => sanitize_text_field($snippet['name']),
-                    'type' => in_array($snippet['type'], ['css', 'js']) ? $snippet['type'] : 'css',
+                    'type' => in_array($snippet['type'], ['css', 'js', 'php']) ? $snippet['type'] : 'css',
                     'code' => isset($snippet['code']) ? $snippet['code'] : '',
                     'active' => false,
                     'created' => current_time('mysql'),

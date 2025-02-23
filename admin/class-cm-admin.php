@@ -3,8 +3,12 @@ namespace Code_Manager\Admin;
 
 defined('ABSPATH') || exit;
 
+use SebastianBergmann\Diff\Differ;
+use SebastianBergmann\Diff\Output\UnifiedDiffOutputBuilder;
+
 class CM_Admin {
     protected static $snippets_option = 'cm_code_snippets';
+    const MAX_VERSIONS = 10; // Maximum number of versions to store
 
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'add_menu'));
@@ -16,6 +20,8 @@ class CM_Admin {
         add_action('wp_ajax_cm_get_snippet', [__CLASS__, 'get_snippet']);
         add_action('wp_ajax_cm_export_defaults', [__CLASS__, 'export_default_snippets']);
         add_action('wp_ajax_cm_import_defaults', [__CLASS__, 'import_default_snippets']);
+        add_action('wp_ajax_cm_get_snippet_versions', [__CLASS__, 'get_snippet_versions']);
+        add_action('wp_ajax_cm_revert_snippet', [__CLASS__, 'revert_snippet']);
     }
 
     public static function install_default_snippets() {
@@ -115,10 +121,25 @@ class CM_Admin {
         $page_options[$page->ID] = $page->post_title;
     }
 
+    $post_types = get_post_types(array('public' => true), 'names');
+    $post_type_options = array();
+    foreach ($post_types as $post_type) {
+        $post_type_options[$post_type] = $post_type;
+    }
+
+    $roles = get_editable_roles();
+    $role_options = array();
+    foreach ($roles as $role_key => $role_details) {
+        $role_options[$role_key] = $role_details['name'];
+    }
+
+
     wp_localize_script('cm-admin-js', 'cmData', array(
         'ajaxUrl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('cm_ajax_nonce'),
         'pages' => $page_options,
+        'post_types' => $post_type_options,
+        'user_roles' => $role_options,
         'i18n' => array(
             'confirmDelete' => __('Are you sure you want to delete this snippet?', 'code-manager'),
             'confirmInstall' => __('This will install predefined snippets. Continue?', 'code-manager'),
@@ -135,7 +156,7 @@ class CM_Admin {
             'updateSnippet' => __('Update Snippet', 'code-manager'),
             'saving' => __('Saving...', 'code-manager'),
             'saveFailed' => __('Failed to save snippet', 'code-manager'),
-        'allPages' => __('All Pages', 'code-manager'),
+            'allPages' => __('All Pages', 'code-manager'),
             'phpNotAllowed' => __('Page selection is not available for PHP snippets.', 'code-manager')
         ),
         'defaultTheme' => 'github' // Set a default theme.
@@ -176,7 +197,25 @@ class CM_Admin {
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    
+                    <div class="cm-field-group">
+                        <label for="cmSnippetConditionType"><?php esc_html_e('Condition Type:', 'code-manager'); ?></label>
+                        <select id="cmSnippetConditionType" required>
+                            <option value="none"><?php esc_html_e('None (Always Active)', 'code-manager'); ?></option>
+                            <option value="urls"><?php esc_html_e('URL', 'code-manager'); ?></option>
+                            <option value="hook"><?php esc_html_e('Hook (PHP only)', 'code-manager'); ?></option>
+                        </select>
+                    </div>
 
+                    <div class="cm-field-group" id="cmSnippetUrls" style="display: none;">
+                        <label for="cmSnippetUrlsInput"><?php esc_html_e('Enter URLs (one per line):', 'code-manager'); ?></label>
+                        <textarea id="cmSnippetUrlsInput" rows="5" class="widefat"></textarea>
+                    </div>
+
+                    <div class="cm-field-group" id="cmSnippetHook" style="display: none;">
+                        <label for="cmSnippetHookInput"><?php esc_html_e('Enter WordPress Hook:', 'code-manager'); ?></label>
+                        <input type="text" id="cmSnippetHookInput" class="regular-text">
+                    </div>
 
                     <div class="cm-field-group">
                         <label for="cmSnippetCode"><?php esc_html_e('Code:', 'code-manager'); ?></label>
@@ -234,6 +273,9 @@ class CM_Admin {
                                 <button class="button cm-toggle-snippet">
                                     <?php esc_html_e('Toggle', 'code-manager'); ?>
                                 </button>
+                                 <button class="button cm-versions-snippet">
+                                        <?php esc_html_e('Versions', 'code-manager'); ?>
+                                 </button>
                                 <?php if (empty($snippet['is_default'])) : // Show delete only for non-defaults ?>
                                     <button class="button button-delete cm-delete-snippet">
                                         <?php esc_html_e('Delete', 'code-manager'); ?>
@@ -280,14 +322,24 @@ public static function save_snippet() {
     $snippet_id = isset($_POST['snippet_id']) ? sanitize_key($_POST['snippet_id']) : uniqid('cm_');
     $snippets = get_option(self::$snippets_option, []);
 
+
     $snippet = [
         'name' => sanitize_text_field($_POST['name']),
         'type' => $_POST['type'],
         'code' => $_POST['code'],
         'page_id' => isset($_POST['page_id']) ? absint($_POST['page_id']) : 0,
         'created' => current_time('mysql'),
-        'modified' => current_time('mysql')
+        'modified' => current_time('mysql'),
+        'condition_type' => isset($_POST['condition_type']) ? sanitize_text_field($_POST['condition_type']) : 'none',
+        'urls' => isset($_POST['urls']) ? array_map('esc_url_raw', explode("\n", $_POST['urls'])) : [],
+        'hook' => isset($_POST['hook']) ? sanitize_text_field($_POST['hook']) : '',
+
     ];
+
+    // Preserve existing 'urls' if not present in $_POST
+    if (!isset($_POST['urls']) && isset($snippets[$snippet_id]['urls'])) {
+        $snippet['urls'] = $snippets[$snippet_id]['urls'];
+    }
 
     if ($snippet['type'] === 'php') {
       $snippet['code'] = self::sanitize_php_code($snippet['code']);
@@ -299,12 +351,35 @@ public static function save_snippet() {
     } else {
         $snippet['active'] = false; // Default to inactive for new snippets
     }
-     // Preserve existing 'created' status if it exists
-    if (isset($snippets[$snippet_id]['created'])) {
-        $snippet['created'] = $snippets[$snippet_id]['created'];
+    // Preserve existing 'created' status if it exists
+   if (isset($snippets[$snippet_id]['created'])) {
+       $snippet['created'] = $snippets[$snippet_id]['created'];
+   }
+
+
+    // Versioning: Add the current snippet as a new version
+    if (!isset($snippets[$snippet_id]['versions']) || !is_array($snippets[$snippet_id]['versions'])) {
+      $snippets[$snippet_id]['versions'] = array();
     }
 
+    // Add the current state as a new version, before updating.
+    if(isset($snippets[$snippet_id])) {
+        $current_state = $snippets[$snippet_id];
+
+        // Remove 'versions' from the current state to avoid nested version history
+        unset($current_state['versions']);
+        $current_state['timestamp'] = current_time('mysql');
+
+        // Prepend the current state to the versions array
+        array_unshift($snippets[$snippet_id]['versions'], $current_state);
+
+        // Limit the number of versions
+        $snippets[$snippet_id]['versions'] = array_slice($snippets[$snippet_id]['versions'], 0, self::MAX_VERSIONS);
+    }
+
+
     $snippets[$snippet_id] = $snippet;
+
 
     update_option(self::$snippets_option, $snippets);
     wp_send_json_success($snippet_id);
@@ -384,9 +459,38 @@ public static function save_snippet() {
     }
 
 
-    public static function get_snippet() {
-        check_ajax_referer('cm_ajax_nonce', 'security');
+  public static function get_snippet()
+  {
+    check_ajax_referer('cm_ajax_nonce', 'security');
 
+    if (!current_user_can('manage_options')) {
+      wp_send_json_error(__('Unauthorized', 'code-manager'));
+    }
+
+    $snippet_id = isset($_GET['snippet_id']) ? sanitize_key($_GET['snippet_id']) : '';
+    $snippets = get_option(self::$snippets_option, []);
+
+    if (!isset($snippets[$snippet_id])) {
+      wp_send_json_error(__('Snippet not found', 'code-manager'));
+    }
+
+    $snippet = $snippets[$snippet_id];
+        if (!isset($snippet['urls'])) {
+            $snippet['urls'] = array();
+        }
+        if (!isset($snippet['hook'])) {
+            $snippet['hook'] = '';
+        }
+        if (!isset($snippet['condition_type'])) {
+            $snippet['condition_type'] = 'none';
+        }
+
+        wp_send_json_success($snippet);
+    }
+
+    // New AJAX handler for retrieving snippet versions
+    public static function get_snippet_versions() {
+        check_ajax_referer('cm_ajax_nonce', 'security');
         if (!current_user_can('manage_options')) {
             wp_send_json_error(__('Unauthorized', 'code-manager'));
         }
@@ -398,6 +502,37 @@ public static function save_snippet() {
             wp_send_json_error(__('Snippet not found', 'code-manager'));
         }
 
-        wp_send_json_success($snippets[$snippet_id]);
-  }
+        $versions = isset($snippets[$snippet_id]['versions']) ? $snippets[$snippet_id]['versions'] : array();
+
+        wp_send_json_success($versions);
+    }
+
+    // New AJAX handler for reverting to a specific version
+    public static function revert_snippet() {
+        check_ajax_referer('cm_ajax_nonce', 'security');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('Unauthorized', 'code-manager'));
+        }
+
+        $snippet_id = isset($_POST['snippet_id']) ? sanitize_key($_POST['snippet_id']) : '';
+        $version_timestamp = isset($_POST['version_timestamp']) ? sanitize_text_field($_POST['version_timestamp']) : '';
+
+        $snippets = get_option(self::$snippets_option, []);
+
+        if (!isset($snippets[$snippet_id])) {
+            wp_send_json_error(__('Snippet not found', 'code-manager'));
+        }
+
+        if (isset($snippets[$snippet_id]['versions'][$version_timestamp])) {
+            $version_to_revert = $snippets[$snippet_id]['versions'][$version_timestamp];
+            // Don't include version history, when restoring.
+            unset($version_to_revert['versions']);
+            $snippets[$snippet_id] = $version_to_revert;
+
+            update_option(self::$snippets_option, $snippets);
+            wp_send_json_success();
+        }
+
+        wp_send_json_error(__('Version not found', 'code-manager'));
+    }
 }

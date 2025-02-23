@@ -1,4 +1,6 @@
-# Code Manager ![WordPress Plugin Version](https://img.shields.io/badge/Version-1.7.0-blue) ![License](https://img.shields.io/badge/License-GPL--3.0-green)
+# Code Manager ![WordPress Plugin Version](https://img.shields.io/badge/Version-1.7.1-blue) ![License](https://img.shields.io/badge/License-GPL--3.0-green)
+
+![Code Manager Interface](assets/banner-1544x500.png)
 
 Professional code snippet management for WordPress, developed by [SPARKWEB Studio](https://sparkwebstudio.com/).
 
@@ -12,6 +14,8 @@ Professional code snippet management for WordPress, developed by [SPARKWEB Studi
 -   **Page-Specific JS**: Assign JavaScript snippets to specific pages.
 -   **Import/Export**: Import and export default snippets as JSON files.
 - **Theme Selection**: Choose between different editor themes (currently GitHub and Monokai).
+- **Granular Control for Snippet Execution:** Execute snippets on specific URLs or WordPress hooks (for PHP snippets).
+- **Version Control:** Snippets are versioned, allowing you to revert to previous versions.
 
 ### Security
 -   **Input Sanitization**: WPCS-compliant code cleaning for CSS and JavaScript. Basic sanitization for PHP code (removal of PHP tags and dangerous functions).
@@ -69,6 +73,11 @@ Professional code snippet management for WordPress, developed by [SPARKWEB Studi
 ### Theme Selection
 * Go to **Code Manager**
 * You will find a select dropdown to switch between the available themes.
+
+### Version Control
+* Go to **Code Manager**
+* Click the "Versions" button next to the snippet you want to view versions for.
+* A list of versions will be displayed. You can revert to a previous version or view the diff between versions.
 
 ## Changelog
 See [CHANGELOG.md](CHANGELOG.md) for a complete history of changes.

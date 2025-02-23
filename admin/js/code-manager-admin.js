@@ -10,7 +10,7 @@ jQuery(document).ready(function($) {
         editor = ace.edit("cmSnippetCode");
         editor.setTheme("ace/theme/" + cmData.defaultTheme); // Use default theme
         editor.session.setMode("ace/mode/" + mode);
-        // editor.setOptions({  // Moved to after initialization
+        // editor.setOptions({
         //     enableBasicAutocompletion: true,
         //     enableLiveAutocompletion: true,
         //     enableSnippets: true
@@ -24,28 +24,13 @@ jQuery(document).ready(function($) {
         if (selectedType === 'js') {
             $('#cmSnippetPageSelector').show();
             initializeEditor('javascript');
-            editor.setOptions({
-                enableBasicAutocompletion: true,
-                enableLiveAutocompletion: true,
-                enableSnippets: true
-            });
         } else if (selectedType === 'php') {
             $('#cmSnippetPageSelector').hide();
             alert(cmData.i18n.phpNotAllowed);
             initializeEditor('php');
-            editor.setOptions({
-                enableBasicAutocompletion: true,
-                enableLiveAutocompletion: true,
-                enableSnippets: true
-            });
         } else {
             $('#cmSnippetPageSelector').hide();
             initializeEditor('css');
-            editor.setOptions({
-                enableBasicAutocompletion: true,
-                enableLiveAutocompletion: true,
-                enableSnippets: true
-            });
         }
     });
 
@@ -55,47 +40,52 @@ jQuery(document).ready(function($) {
         const snippetId = $(this).closest('tr').data('snippet-id');
         currentSnippetId = snippetId;
 
+        console.log("Snippet ID:", snippetId); // Debug: Log the snippet ID
+
         $.get(cmData.ajaxUrl, {
             action: 'cm_get_snippet',
             snippet_id: snippetId,
             security: cmData.nonce
         }, function(response) {
+            console.log("AJAX Response:", response); // Debug: Log the AJAX response
+
             if (response.success) {
                 const snippet = response.data;
+                console.log("Snippet Data:", snippet); // Debug: Log the snippet data
+
                 $('#cmSnippetName').val(snippet.name);
                 $('#cmSnippetType').val(snippet.type);
+
+                // Populate condition fields
+                $('#cmSnippetConditionType').val(snippet.condition_type);
+                $('#cmSnippetUrlsInput').val(snippet.urls.join('\n'));
+                $('#cmSnippetHookInput').val(snippet.hook);
+
+                // Show/hide condition fields based on condition_type
+                $('#cmSnippetConditionType').trigger('change');
 
                 if (snippet.type === 'js') {
                     $('#cmSnippetPageSelector').show();
                     $('#cmSnippetPage').val(snippet.page_id);
-                    initializeEditor('javascript');
-                    editor.setOptions({
-                        enableBasicAutocompletion: true,
-                        enableLiveAutocompletion: true,
-                        enableSnippets: true
-                    });
                 } else if (snippet.type === 'php') {
                     $('#cmSnippetPageSelector').hide();
-                    initializeEditor('php');
-                    editor.setOptions({
-                        enableBasicAutocompletion: true,
-                        enableLiveAutocompletion: true,
-                        enableSnippets: true
-                    });
-                }
-                else {
+                } else {
                     $('#cmSnippetPageSelector').hide();
-                    initializeEditor('css');
-                    editor.setOptions({
-                        enableBasicAutocompletion: true,
-                        enableLiveAutocompletion: true,
-                        enableSnippets: true
-                    });
                 }
-                // Set the value in the CodeMirror instance AFTER initialization
-                editor.setValue(snippet.code);
-                $('#cmAddSnippetForm').find('button[type="submit"]').text(cmData.i18n.updateSnippet);
 
+                // Initialize Ace Editor after fetching the snippet
+                if ($('#cmSnippetType').val() === 'js') {
+                    initializeEditor('javascript');
+                } else if ($('#cmSnippetType').val() === 'php') {
+                    initializeEditor('php');
+                } else {
+                    initializeEditor('css');
+                }
+
+                console.log("Editor:", editor); // Debug: Log the editor object
+                console.log("Snippet Code:", snippet.code); // Debug: Log the snippet code
+                editor.session.setValue(snippet.code); // Use session.setValue
+                $('#cmAddSnippetForm').find('button[type="submit"]').text(cmData.i18n.updateSnippet);
             }
         });
     });
@@ -104,9 +94,16 @@ jQuery(document).ready(function($) {
     $('#cmAddSnippetForm').on('submit', function(e) {
         e.preventDefault();
 
-        // Get the value from the CodeMirror instance
         const code = editor.getValue();
+        const conditionType = $('#cmSnippetConditionType').val();
+        let urls = [];
+        let hook = '';
 
+        if (conditionType === 'urls') {
+            urls = $('#cmSnippetUrlsInput').val().split('\n').map(url => url.trim());
+        } else if (conditionType === 'hook') {
+            hook = $('#cmSnippetHookInput').val();
+        }
 
         const data = {
             action: 'cm_save_snippet',
@@ -114,6 +111,9 @@ jQuery(document).ready(function($) {
             type: $('#cmSnippetType').val(),
             code: code,
             page_id: $('#cmSnippetPage').val(),
+            condition_type: conditionType,
+            urls: urls,
+            hook: hook,
             security: cmData.nonce
         };
 
@@ -248,6 +248,72 @@ jQuery(document).ready(function($) {
       editor.setTheme("ace/theme/" + theme);
     });
 
-      // Initialize on load with CSS mode
+    // Initialize on load with CSS mode
     initializeEditor('css');
+
+    //Condition type logic
+    $('#cmSnippetConditionType').on('change', function() {
+        const conditionType = $(this).val();
+        $('#cmSnippetPostIds, #cmSnippetPostTypes, #cmSnippetUserRoles, #cmSnippetUrls, #cmSnippetHook').hide();
+
+        if (conditionType === 'post_ids') {
+            $('#cmSnippetPostIds').show();
+            // Populate the select with options
+            const select = $('#cmSnippetPostIdsSelect');
+            select.empty(); // Clear existing options
+            $.each(cmData.pages, function(id, title) {
+                select.append($('<option>', {
+                    value: id,
+                    text: title
+                }));
+            });
+
+        } else if (conditionType === 'post_types') {
+            $('#cmSnippetPostTypes').show();
+            const select = $('#cmSnippetPostTypesSelect');
+            select.empty();
+            $.each(cmData.post_types, function(id, title) {
+                select.append($('<option>', {
+                    value: id,
+                    text: title
+                }));
+            });
+        } else if (conditionType === 'user_roles') {
+            $('#cmSnippetUserRoles').show();
+            const select = $('#cmSnippetUserRolesSelect');
+            select.empty();
+            $.each(cmData.user_roles, function(id, title) {
+                select.append($('<option>', {
+                    value: id,
+                    text: title
+                }));
+            });
+        } else if (conditionType === 'urls') {
+            $('#cmSnippetUrls').show();
+        } else if (conditionType === 'hook') {
+            $('#cmSnippetHook').show();
+         }
+    });
+
+    // Handle click on the "Versions" button
+    $(document).on('click', '.cm-versions-snippet', function() {
+        const snippetId = $(this).closest('tr').data('snippet-id');
+        $.get(cmData.ajaxUrl, {
+            action: 'cm_get_snippet_versions',
+            snippet_id: snippetId,
+            security: cmData.nonce
+        }, function(response) {
+            if (response.success) {
+                if (response.data.length === 0) {
+                    console.log('No versions found for this snippet.');
+                    // TODO: Display a message indicating no versions found
+                } else {
+                    console.log(response.data); // Log the versions to the console
+                    // TODO: Display the versions in a modal or a dedicated section
+                }
+            } else {
+                alert('Failed to retrieve versions.');
+            }
+        });
+    });
 });
